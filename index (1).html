@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday Seowoo ✨</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --purple:#9b59ff;--purple-dark:#6c3aff;--blue:#4fc3f7;--pink:#f06292;
+    --glow-purple:0 0 30px rgba(155,89,255,0.6);--glow-blue:0 0 30px rgba(79,195,247,0.6);
+  }
+  html,body{width:100%;height:100%;overflow-x:hidden;background:#000;color:#fff;font-family:'Georgia',serif}
+  canvas{display:block}
+
+  /* SECTION SYSTEM */
+  .section{position:relative;width:100%;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+  /* ENTRY SCREEN */
+  #entry{position:fixed;inset:0;z-index:1000;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem}
+  #star-burst{position:relative;width:6px;height:6px}
+  #star-core{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 20px 6px rgba(155,89,255,1),0 0 60px 20px rgba(155,89,255,0.6);position:absolute;top:0;left:0}
+  #entry-text{font-size:clamp(1.2rem,3vw,2rem);letter-spacing:0.3em;color:rgba(255,255,255,0);text-align:center;font-style:italic;font-weight:300}
+  #music-panel{display:none;flex-direction:column;align-items:center;gap:1rem;padding:2rem 3rem;background:rgba(255,255,255,0.05);border:1px solid rgba(155,89,255,0.3);border-radius:20px;backdrop-filter:blur(20px);box-shadow:var(--glow-purple)}
+  #music-panel p{font-size:0.85rem;letter-spacing:0.2em;color:rgba(255,255,255,0.5);text-transform:uppercase}
+  .music-btns{display:flex;gap:1rem;align-items:center}
+  .mbtn{width:48px;height:48px;border-radius:50%;border:1px solid rgba(155,89,255,0.5);background:rgba(155,89,255,0.15);color:#fff;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all 0.3s;backdrop-filter:blur(10px)}
+  .mbtn:hover{background:rgba(155,89,255,0.4);box-shadow:var(--glow-purple);transform:scale(1.1)}
+  #btn-close-music{width:36px;height:36px;font-size:0.8rem;opacity:0.6;position:absolute;top:1rem;right:1rem;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#fff;cursor:pointer}
+  #btn-close-music:hover{opacity:1}
+  #scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);opacity:0;display:flex;flex-direction:column;align-items:center;gap:0.5rem;font-size:0.75rem;letter-spacing:0.2em;color:rgba(255,255,255,0.4);text-transform:uppercase}
+  .scroll-arrow{width:20px;height:20px;border-right:1px solid rgba(155,89,255,0.5);border-bottom:1px solid rgba(155,89,255,0.5);transform:rotate(45deg);animation:scrollBounce 1.5s ease-in-out infinite}
+  @keyframes scrollBounce{0%,100%{transform:rotate(45deg) translateY(-3px)}50%{transform:rotate(45deg) translateY(3px)}}
+
+  /* THREE.JS CANVAS */
+  #three-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+  /* MAIN CONTENT */
+  #main-content{position:relative;z-index:10;opacity:0;pointer-events:none}
+  #main-content.visible{opacity:1;pointer-events:all}
+
+  /* SECTION 2 - HERO */
+  #hero{min-height:100vh}
+  .hero-inner{text-align:center;padding:2rem}
+  .hero-title{font-size:clamp(2rem,6vw,5rem);letter-spacing:0.1em;font-weight:300;line-height:1.3;animation:float 4s ease-in-out infinite}
+  .hero-title span{display:block}
+  .hero-name{background:linear-gradient(135deg,var(--purple),var(--blue),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:clamp(3rem,9vw,8rem);font-weight:700;text-shadow:none;filter:drop-shadow(0 0 30px rgba(155,89,255,0.8))}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  .glow-pulse{animation:glowPulse 3s ease-in-out infinite}
+  @keyframes glowPulse{0%,100%{filter:drop-shadow(0 0 20px rgba(155,89,255,0.5))}50%{filter:drop-shadow(0 0 40px rgba(155,89,255,1))}}
+
+  /* SECTION 3 - MESSAGE */
+  #message-section{min-height:100vh;flex-direction:column;gap:2rem}
+  .open-btn{padding:1.2rem 3rem;background:linear-gradient(135deg,rgba(155,89,255,0.2),rgba(79,195,247,0.2));border:1px solid rgba(155,89,255,0.5);border-radius:50px;color:#fff;font-size:1rem;letter-spacing:0.2em;cursor:pointer;transition:all 0.4s;backdrop-filter:blur(10px);font-family:inherit}
+  .open-btn:hover{background:linear-gradient(135deg,rgba(155,89,255,0.4),rgba(79,195,247,0.4));box-shadow:0 0 40px rgba(155,89,255,0.5);transform:scale(1.05)}
+
+  /* MESSAGE MODAL */
+  #msg-modal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
+  .msg-card{max-width:600px;width:90%;padding:3rem;background:rgba(255,255,255,0.05);border:1px solid rgba(155,89,255,0.4);border-radius:24px;backdrop-filter:blur(30px);box-shadow:0 0 60px rgba(155,89,255,0.3),0 0 120px rgba(79,195,247,0.1);position:relative;transform:scale(0.8);opacity:0}
+  .msg-card h3{font-size:1.2rem;letter-spacing:0.3em;color:rgba(155,89,255,0.9);margin-bottom:1.5rem;text-align:center;font-weight:300;text-transform:uppercase}
+  .msg-text{font-size:1.05rem;line-height:1.9;color:rgba(255,255,255,0.88);min-height:100px;font-style:italic}
+  .msg-close{position:absolute;top:1rem;right:1.2rem;background:transparent;border:none;color:rgba(255,255,255,0.4);font-size:1.4rem;cursor:pointer;transition:color 0.2s}
+  .msg-close:hover{color:#fff}
+  .msg-hearts{text-align:center;margin-top:1.5rem;font-size:1.5rem;opacity:0}
+
+  /* SECTION 4 - SPACE */
+  #space-section{min-height:100vh}
+
+  /* SECTION 5 - GALLERY */
+  #gallery-section{min-height:100vh;flex-direction:column;gap:3rem;padding:4rem 1rem}
+  .gallery-title{font-size:clamp(1.5rem,4vw,3rem);letter-spacing:0.2em;color:rgba(255,255,255,0.8);font-weight:300;text-align:center}
+  .gallery-wrapper{width:100%;max-width:900px;position:relative;overflow:hidden}
+  .gallery-track{display:flex;transition:transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94);will-change:transform}
+  .photo-card{min-width:300px;margin:0 1rem;perspective:1000px;flex-shrink:0}
+  .card-inner{background:rgba(255,255,255,0.06);border:1px solid rgba(155,89,255,0.3);border-radius:20px;overflow:hidden;backdrop-filter:blur(20px);transition:transform 0.4s,box-shadow 0.4s;transform-style:preserve-3d}
+  .photo-card:hover .card-inner{transform:rotateY(-5deg) rotateX(3deg) scale(1.05);box-shadow:0 20px 60px rgba(155,89,255,0.4)}
+  .card-img{width:100%;height:220px;object-fit:cover;background:linear-gradient(135deg,#1a0a3e,#0a1a3e);display:flex;align-items:center;justify-content:center;font-size:4rem}
+  .card-caption{padding:1rem 1.2rem;font-size:0.85rem;letter-spacing:0.15em;color:rgba(255,255,255,0.6);text-transform:uppercase}
+  .gallery-nav{display:flex;gap:1rem}
+  .gnav{width:52px;height:52px;border-radius:50%;background:rgba(155,89,255,0.15);border:1px solid rgba(155,89,255,0.4);color:#fff;font-size:1.2rem;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center}
+  .gnav:hover{background:rgba(155,89,255,0.35);box-shadow:var(--glow-purple);transform:scale(1.1)}
+
+  /* SECTION 6 - ENDING */
+  #ending-section{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2rem;padding:2rem}
+  .ending-quote{font-size:clamp(1.1rem,3vw,1.8rem);line-height:1.9;color:rgba(255,255,255,0.85);font-style:italic;max-width:650px;font-weight:300;opacity:0}
+  .ending-made{font-size:1rem;letter-spacing:0.3em;color:rgba(155,89,255,0.8);text-transform:uppercase;opacity:0}
+  .heart-beat{display:inline-block;animation:heartBeat 1.2s ease-in-out infinite}
+  @keyframes heartBeat{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+
+  /* FLOATING PARTICLES CSS */
+  .particle{position:absolute;border-radius:50%;pointer-events:none;animation:particleFloat linear infinite}
+  @keyframes particleFloat{0%{transform:translateY(0) translateX(0);opacity:0}10%{opacity:1}90%{opacity:0.3}100%{transform:translateY(-100vh) translateX(var(--tx));opacity:0}}
+
+  /* RESPONSIVE */
+  @media(max-width:600px){
+    .photo-card{min-width:260px}
+    .msg-card{padding:2rem 1.5rem}
+  }
+</style>
+</head>
+<body>
+
+<!-- THREE.JS CANVAS -->
+<canvas id="three-canvas"></canvas>
+
+<!-- ENTRY SCREEN -->
+<div id="entry">
+  <div id="star-burst">
+    <div id="star-core"></div>
+  </div>
+  <div id="entry-text">A small surprise for you...</div>
+  <div id="music-panel">
+    <button id="btn-close-music">✕</button>
+    <p>🎵 A song for you</p>
+    <div class="music-btns">
+      <button class="mbtn" id="btn-play" title="Play">▶</button>
+      <button class="mbtn" id="btn-pause" title="Pause">⏸</button>
+    </div>
+    <audio id="audio" src="music.mp3" loop></audio>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main-content">
+
+  <!-- SECTION 2: HERO -->
+  <section id="hero" class="section">
+    <div class="hero-inner">
+      <div class="hero-title glow-pulse">
+        <span style="font-size:clamp(1rem,3vw,1.6rem);letter-spacing:0.5em;color:rgba(255,255,255,0.6);font-weight:300;margin-bottom:0.5rem">✨ WISHING YOU A</span>
+        <span class="hero-name">Happy Birthday</span>
+        <span style="background:linear-gradient(90deg,var(--blue),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:clamp(2rem,7vw,5.5rem);font-weight:600">Seowoo 🎂✨</span>
+      </div>
+    </div>
+    <div id="scroll-hint">
+      <span>Scroll to explore</span>
+      <div class="scroll-arrow"></div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: MESSAGE -->
+  <section id="message-section" class="section">
+    <div style="text-align:center">
+      <p style="font-size:clamp(0.9rem,2vw,1.1rem);letter-spacing:0.3em;color:rgba(255,255,255,0.4);margin-bottom:2rem;text-transform:uppercase">Something special awaits you</p>
+      <button class="open-btn" id="open-msg-btn">Open your message 💌</button>
+    </div>
+  </section>
+
+  <!-- SECTION 4: SPACE -->
+  <section id="space-section" class="section">
+    <div style="text-align:center;pointer-events:none">
+      <p style="font-size:clamp(1rem,2.5vw,1.4rem);letter-spacing:0.4em;color:rgba(255,255,255,0.3);text-transform:uppercase">Move your mouse · Feel the universe</p>
+    </div>
+  </section>
+
+  <!-- SECTION 5: GALLERY -->
+  <section id="gallery-section" class="section">
+    <h2 class="gallery-title">✨ Memories</h2>
+    <div class="gallery-wrapper">
+      <div class="gallery-track" id="gallery-track">
+        <div class="photo-card">
+          <div class="card-inner">
+            <div class="card-img"><img src="photo1.jpg" alt="Memory 1" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:linear-gradient(135deg,#2d1b69,#11998e);font-size:3.5rem">🌸</div></div>
+            <div class="card-caption">Beautiful moments 🌸</div>
+          </div>
+        </div>
+        <div class="photo-card">
+          <div class="card-inner">
+            <div class="card-img"><img src="photo2.jpg" alt="Memory 2" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:linear-gradient(135deg,#6c3aff,#f06292);font-size:3.5rem">💫</div></div>
+            <div class="card-caption">Special memories 💫</div>
+          </div>
+        </div>
+        <div class="photo-card">
+          <div class="card-inner">
+            <div class="card-img"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a1a3e,#4fc3f7);font-size:3.5rem">🌟</div></div>
+            <div class="card-caption">Shining always 🌟</div>
+          </div>
+        </div>
+        <div class="photo-card">
+          <div class="card-inner">
+            <div class="card-img"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a0a2e,#ff6b9d);font-size:3.5rem">🎂</div></div>
+            <div class="card-caption">Your special day 🎂</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="gallery-nav">
+      <button class="gnav" id="prev-btn">‹</button>
+      <button class="gnav" id="next-btn">›</button>
+    </div>
+  </section>
+
+  <!-- SECTION 6: ENDING -->
+  <section id="ending-section" class="section">
+    <div class="ending-quote" id="ending-quote">
+      "You are a star and I want you to shine in the space. 🌠<br><br>
+      I hope you may achieve all your goals and dreams of your life. 🎻"
+    </div>
+    <div class="ending-made" id="ending-made">
+      Made with <span class="heart-beat">❤️</span> for Seowoo.
+    </div>
+  </section>
+
+</div>
+
+<!-- MESSAGE MODAL -->
+<div id="msg-modal">
+  <div class="msg-card" id="msg-card">
+    <button class="msg-close" id="msg-close">✕</button>
+    <h3>💌 Just for you</h3>
+    <div class="msg-text" id="msg-text"></div>
+    <div class="msg-hearts" id="msg-hearts">💕 💝 💕</div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// THREE.JS - STARFIELD + CONSTELLATION + ORBS
+// ============================================================
+const canvas = document.getElementById('three-canvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x000000, 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+camera.position.z = 500;
+
+// Stars
+const starGeo = new THREE.BufferGeometry();
+const starCount = 4000;
+const starPos = new Float32Array(starCount * 3);
+const starSizes = new Float32Array(starCount);
+for(let i=0;i<starCount;i++){
+  starPos[i*3] = (Math.random()-0.5)*2000;
+  starPos[i*3+1] = (Math.random()-0.5)*2000;
+  starPos[i*3+2] = (Math.random()-0.5)*2000;
+  starSizes[i] = Math.random()*2+0.5;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+starGeo.setAttribute('size', new THREE.BufferAttribute(starSizes,1));
+const starMat = new THREE.PointsMaterial({color:0xffffff,sizeAttenuation:true,size:1.5,transparent:true,opacity:0.85});
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
+
+// Colored particles
+function makeColoredParticles(color, count, spread){
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count*3);
+  for(let i=0;i<count;i++){
+    pos[i*3]=(Math.random()-0.5)*spread;
+    pos[i*3+1]=(Math.random()-0.5)*spread;
+    pos[i*3+2]=(Math.random()-0.5)*spread;
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const mat = new THREE.PointsMaterial({color,size:1.2,transparent:true,opacity:0.7,sizeAttenuation:true});
+  return new THREE.Points(geo,mat);
+}
+const purpleParticles = makeColoredParticles(0x9b59ff,600,1200);
+const blueParticles = makeColoredParticles(0x4fc3f7,400,1400);
+const pinkParticles = makeColoredParticles(0xf06292,300,1000);
+scene.add(purpleParticles,blueParticles,pinkParticles);
+
+// Constellation lines
+function makeConstellationLines(){
+  const points = [];
+  const n = 14;
+  for(let i=0;i<n;i++){
+    points.push(new THREE.Vector3(
+      (Math.random()-0.5)*800,
+      (Math.random()-0.5)*800,
+      (Math.random()-0.5)*400
+    ));
+  }
+  const lineMat = new THREE.LineBasicMaterial({color:0x9b59ff,transparent:true,opacity:0.25});
+  const group = new THREE.Group();
+  for(let i=0;i<n-1;i++){
+    if(Math.random()<0.6){
+      const geo = new THREE.BufferGeometry().setFromPoints([points[i],points[i+1]]);
+      group.add(new THREE.Line(geo,lineMat));
+    }
+  }
+  return group;
+}
+const constellations = makeConstellationLines();
+scene.add(constellations);
+
+// Light orbs
+const orbGroup = new THREE.Group();
+const orbColors = [0x9b59ff,0x4fc3f7,0xf06292,0xffffff,0xa29bfe];
+for(let i=0;i<18;i++){
+  const g = new THREE.SphereGeometry(Math.random()*2+1,8,8);
+  const m = new THREE.MeshBasicMaterial({color:orbColors[i%orbColors.length],transparent:true,opacity:Math.random()*0.4+0.2});
+  const mesh = new THREE.Mesh(g,m);
+  mesh.position.set((Math.random()-0.5)*600,(Math.random()-0.5)*600,(Math.random()-0.5)*300);
+  mesh.userData.speed = Math.random()*0.003+0.001;
+  mesh.userData.phase = Math.random()*Math.PI*2;
+  orbGroup.add(mesh);
+}
+scene.add(orbGroup);
+
+// Mouse parallax
+let mouseX=0,mouseY=0,targetX=0,targetY=0;
+document.addEventListener('mousemove',e=>{
+  mouseX=(e.clientX/window.innerWidth-0.5)*2;
+  mouseY=-(e.clientY/window.innerHeight-0.5)*2;
+});
+
+// Scroll
+let scrollY=0;
+window.addEventListener('scroll',()=>{scrollY=window.scrollY});
+
+// Resize
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+let endingMode=false;
+
+function animate(){
+  requestAnimationFrame(animate);
+  const t=performance.now()*0.001;
+
+  targetX+=(mouseX-targetX)*0.05;
+  targetY+=(mouseY-targetY)*0.05;
+
+  camera.position.x+=(targetX*80-camera.position.x)*0.05;
+  camera.position.y+=(targetY*50-camera.position.y)*0.05;
+
+  const scrollProgress=scrollY/(document.body.scrollHeight-window.innerHeight||1);
+  camera.position.z=500-scrollProgress*200;
+
+  const speedMult=endingMode?0.1:1;
+
+  stars.rotation.y=t*0.015*speedMult;
+  stars.rotation.x=t*0.008*speedMult;
+  purpleParticles.rotation.y=-t*0.02*speedMult;
+  blueParticles.rotation.x=t*0.018*speedMult;
+  pinkParticles.rotation.z=t*0.012*speedMult;
+  constellations.rotation.y=t*0.005*speedMult;
+
+  orbGroup.children.forEach((o,i)=>{
+    o.position.y+=Math.sin(t*o.userData.speed*10+o.userData.phase)*0.3*speedMult;
+    o.material.opacity=0.15+Math.abs(Math.sin(t*o.userData.speed*5+o.userData.phase))*0.35;
+  });
+
+  renderer.render(scene,camera);
+}
+animate();
+
+// ============================================================
+// ENTRY ANIMATION (GSAP)
+// ============================================================
+const tl = gsap.timeline();
+
+tl.to('#star-core',{
+  duration:0.01,
+  onStart:()=>{gsap.to('#star-core',{width:6,height:6,duration:0.01})}
+})
+.to('#star-core',{
+  scale:8,
+  duration:3,
+  ease:'power2.inOut',
+  boxShadow:'0 0 80px 40px rgba(155,89,255,0.9), 0 0 160px 80px rgba(155,89,255,0.4)'
+},0.5)
+.to('#entry-text',{
+  color:'rgba(255,255,255,0.9)',
+  duration:2,
+  ease:'power2.out'
+},1.5)
+.to('#star-core',{
+  scale:12,
+  opacity:0.5,
+  duration:1.5,
+  ease:'power2.in'
+},3.5)
+.to('#entry-text',{
+  opacity:0,
+  y:-20,
+  duration:1,
+  ease:'power2.in'
+},4)
+.to('#star-core',{
+  opacity:0,
+  duration:0.8
+},4.5)
+.to('#music-panel',{
+  display:'flex',
+  duration:0.01
+},5)
+.from('#music-panel',{
+  opacity:0,
+  y:30,
+  duration:1.2,
+  ease:'back.out(1.7)'
+},5);
+
+// ============================================================
+// MUSIC
+// ============================================================
+const audio=document.getElementById('audio');
+document.getElementById('btn-play').addEventListener('click',()=>audio.play().catch(()=>{}));
+document.getElementById('btn-pause').addEventListener('click',()=>audio.pause());
+document.getElementById('btn-close-music').addEventListener('click',()=>{
+  gsap.to('#music-panel',{opacity:0,y:-20,duration:0.5,onComplete:()=>{
+    document.getElementById('music-panel').style.display='none';
+    revealMain();
+  }});
+});
+
+// Also allow clicking play to proceed
+document.getElementById('btn-play').addEventListener('click',()=>{
+  setTimeout(()=>{
+    revealMain();
+  },800);
+});
+
+function revealMain(){
+  const entry=document.getElementById('entry');
+  const main=document.getElementById('main-content');
+  gsap.to(entry,{opacity:0,duration:1.2,ease:'power2.in',onComplete:()=>{
+    entry.style.display='none';
+  }});
+  main.classList.add('visible');
+  gsap.from(main,{opacity:0,duration:1.5,delay:0.5});
+
+  gsap.to('#scroll-hint',{opacity:1,delay:2,duration:1.5,y:0,ease:'power2.out'});
+
+  setupScrollAnimations();
+}
+
+// ============================================================
+// SCROLL ANIMATIONS
+// ============================================================
+function setupScrollAnimations(){
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Hero text
+  gsap.from('.hero-inner',{
+    opacity:0,y:60,duration:1.5,ease:'power3.out',
+    scrollTrigger:{trigger:'#hero',start:'top 80%'}
+  });
+
+  // Message section
+  gsap.from('#message-section .open-btn',{
+    opacity:0,scale:0.8,duration:1.2,ease:'back.out(1.7)',
+    scrollTrigger:{trigger:'#message-section',start:'top 70%'}
+  });
+
+  // Gallery
+  gsap.from('.gallery-title',{
+    opacity:0,y:40,duration:1,
+    scrollTrigger:{trigger:'#gallery-section',start:'top 80%'}
+  });
+
+  // Ending - slow down stars
+  ScrollTrigger.create({
+    trigger:'#ending-section',
+    start:'top 60%',
+    onEnter:()=>{
+      endingMode=true;
+      gsap.to(starMat,{opacity:0.35,duration:3});
+      gsap.to('#ending-quote',{opacity:1,y:0,duration:2,ease:'power2.out'});
+      gsap.to('#ending-made',{opacity:1,duration:2,delay:2.5,ease:'power2.out'});
+    },
+    onLeaveBack:()=>{
+      endingMode=false;
+      gsap.to(starMat,{opacity:0.85,duration:1.5});
+    }
+  });
+}
+
+// ============================================================
+// MESSAGE MODAL
+// ============================================================
+const fullMsg = `Hi Seowoo, I know today is your Birthday 🎂 and I am so happy for you, I just wanted to make your birthday special so I made this gift by myself for you, just for you. 💕💕, I hope you would like it, Just scroll down and have a look on it. Good luck for your another year. 💝`;
+
+document.getElementById('open-msg-btn').addEventListener('click',()=>{
+  const modal=document.getElementById('msg-modal');
+  const card=document.getElementById('msg-card');
+  modal.style.display='flex';
+  document.getElementById('msg-text').textContent='';
+
+  gsap.to(card,{scale:1,opacity:1,duration:0.7,ease:'back.out(1.7)'});
+
+  let i=0;
+  const interval=setInterval(()=>{
+    document.getElementById('msg-text').textContent=fullMsg.slice(0,i);
+    i+=2;
+    if(i>fullMsg.length){
+      clearInterval(interval);
+      gsap.to('#msg-hearts',{opacity:1,y:0,duration:0.8,delay:0.3,ease:'back.out(1.7)'});
+    }
+  },30);
+});
+
+document.getElementById('msg-close').addEventListener('click',()=>{
+  const card=document.getElementById('msg-card');
+  const modal=document.getElementById('msg-modal');
+  gsap.to(card,{scale:0.8,opacity:0,duration:0.4,ease:'power2.in',onComplete:()=>{
+    modal.style.display='none';
+    document.getElementById('msg-hearts').style.opacity='0';
+    gsap.set(card,{scale:1,opacity:1});
+  }});
+});
+
+document.getElementById('msg-modal').addEventListener('click',function(e){
+  if(e.target===this) document.getElementById('msg-close').click();
+});
+
+// ============================================================
+// GALLERY NAV
+// ============================================================
+const track=document.getElementById('gallery-track');
+const cards=document.querySelectorAll('.photo-card');
+let currentCard=0;
+const cardWidth=()=>cards[0].offsetWidth+32;
+
+function goTo(n){
+  currentCard=Math.max(0,Math.min(n,cards.length-1));
+  track.style.transform=`translateX(-${currentCard*cardWidth()}px)`;
+}
+document.getElementById('next-btn').addEventListener('click',()=>goTo(currentCard+1));
+document.getElementById('prev-btn').addEventListener('click',()=>goTo(currentCard-1));
+
+// ============================================================
+// FLOATING CSS PARTICLES
+// ============================================================
+function spawnParticle(){
+  const p=document.createElement('div');
+  p.className='particle';
+  const size=Math.random()*4+1;
+  const colors=['rgba(155,89,255,0.8)','rgba(79,195,247,0.8)','rgba(240,98,146,0.8)','rgba(255,255,255,0.6)'];
+  p.style.cssText=`
+    width:${size}px;height:${size}px;
+    left:${Math.random()*100}vw;
+    bottom:-10px;
+    background:${colors[Math.floor(Math.random()*colors.length)]};
+    box-shadow:0 0 ${size*3}px ${colors[Math.floor(Math.random()*colors.length)]};
+    animation-duration:${Math.random()*8+6}s;
+    animation-delay:${Math.random()*2}s;
+    --tx:${(Math.random()-0.5)*200}px;
+  `;
+  document.body.appendChild(p);
+  setTimeout(()=>p.remove(),(Math.random()*8+8)*1000);
+}
+setInterval(spawnParticle,300);
+</script>
+</body>
+</html>
